@@ -185,47 +185,55 @@ def seed_patients_and_assignments():
     return created_patients, created_assignments
 
 
+def initialize_database():
+    db.create_all()
+    ensure_user_email_column()
+    admin = User.query.filter_by(username="admin").first()
+    if not admin:
+        admin = User(
+            username="admin",
+            email="admin@medanta",
+            password_hash=User.hash_password("admin123"),
+            role="admin",
+            full_name="Administrator",
+        )
+        db.session.add(admin)
+        db.session.commit()
+        print("Admin user created: admin / admin123")
+    else:
+        if not admin.email:
+            admin.email = "admin@medanta"
+            db.session.commit()
+        print("Admin already exists.")
+
+    seeded_count = seed_doctors()
+    if seeded_count:
+        print(f"Seeded {seeded_count} mock doctors (password: baingan)")
+    else:
+        print("Mock doctors already exist.")
+
+    patient_count, assignment_count = seed_patients_and_assignments()
+    if patient_count or assignment_count:
+        print(
+            f"Seeded {patient_count} mock patients and {assignment_count} assignments "
+            "(patient password: baingan)"
+        )
+    else:
+        print("Mock patients and assignments already exist.")
+
+
 @app.cli.command("initdb")
 def initdb():
     with app.app_context():
-        db.create_all()
-        ensure_user_email_column()
-        admin = User.query.filter_by(username="admin").first()
-        if not admin:
-            admin = User(
-                username="admin",
-                email="admin@medanta",
-                password_hash=User.hash_password("admin123"),
-                role="admin",
-                full_name="Administrator",
-            )
-            db.session.add(admin)
-            db.session.commit()
-            print("Admin user created: admin / admin123")
-        else:
-            if not admin.email:
-                admin.email = "admin@medanta"
-                db.session.commit()
-            print("Admin already exists.")
+        initialize_database()
 
-        seeded_count = seed_doctors()
-        if seeded_count:
-            print(f"Seeded {seeded_count} mock doctors (password: baingan)")
-        else:
-            print("Mock doctors already exist.")
 
-        patient_count, assignment_count = seed_patients_and_assignments()
-        if patient_count or assignment_count:
-            print(
-                f"Seeded {patient_count} mock patients and {assignment_count} assignments "
-                "(patient password: baingan)"
-            )
-        else:
-            print("Mock patients and assignments already exist.")
+if os.environ.get("AUTO_INIT_DB", "1") == "1":
+    with app.app_context():
+        initialize_database()
 
 
 if __name__ == "__main__":
     with app.app_context():
-        db.create_all()
-        ensure_user_email_column()
+        initialize_database()
     app.run(host=HOST, port=PORT, debug=DEBUG)
