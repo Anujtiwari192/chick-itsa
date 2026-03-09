@@ -1,0 +1,58 @@
+﻿{% extends "base.html" %}
+{% block content %}
+  <h1>Doctor Dashboard</h1>
+  <section class="card">
+    <h2>Profile</h2>
+    {% if profile %}
+      <p><strong>ID:</strong> {{ profile.doctor_id }}</p>
+      <p><strong>Name:</strong> {{ profile.user.full_name }}</p>
+      <p><strong>Email:</strong> {{ profile.user.email }}</p>
+      <p><strong>Department:</strong> {{ profile.department }}</p>
+    {% else %}
+      <p>No profile found.</p>
+    {% endif %}
+  </section>
+
+  <section class="card">
+    <form method="get" class="form inline-form">
+      <label>Search patients
+        <input name="q" value="{{ q }}" placeholder="Name, patient ID, diagnosis..." />
+      </label>
+      <button type="submit">Search</button>
+      <a class="button ghost" href="{{ url_for('doctor.dashboard') }}">Reset</a>
+      <a class="button" href="{{ url_for('doctor.create_patient') }}">Add Patient</a>
+    </form>
+  </section>
+
+  <section class="list-section">
+    <h2>Assigned Patients</h2>
+    <table>
+      <tr><th>Patient ID</th><th>Name</th><th>Email</th><th>Age</th><th>Gender</th><th>Diagnosis</th><th>Notes</th><th>Actions</th></tr>
+      {% for a in assignments %}
+        <tr>
+          <td>{{ a.patient.patient_id }}</td>
+          <td>{{ a.patient.user.full_name }}</td>
+          <td>{{ a.patient.user.email }}</td>
+          <td>{{ a.patient.age }}</td>
+          <td>{{ a.patient.gender }}</td>
+          <td>
+            <div>{{ a.patient.diagnosis or "-" }}</div>
+            {% if a.patient.diagnosis_image_list %}
+            <div class="diag-images">
+              {% for image in a.patient.diagnosis_image_list %}
+                <a class="diag-thumb-link js-diag-thumb" href="{{ url_for('static', filename=image) }}" data-full="{{ url_for('static', filename=image) }}" aria-label="Open diagnosis image">
+                  <img class="diag-thumb" src="{{ url_for('static', filename=image) }}" alt="Diagnosis image" loading="lazy" decoding="async" />
+                </a>
+              {% endfor %}
+            </div>
+            {% endif %}
+          </td>
+          <td>{{ a.patient.doctor_notes }}</td>
+          <td class="actions-cell">
+            <a class="link" href="{{ url_for('doctor.edit_patient', patient_profile_id=a.patient.id) }}">Update</a>
+          </td>
+        </tr>
+      {% endfor %}
+    </table>
+  </section>
+{% endblock %}

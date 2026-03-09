@@ -1,0 +1,69 @@
+﻿{% extends "base.html" %}
+{% block content %}
+  <section class="card narrow">
+    <h1>Update Patient</h1>
+    <form method="post" class="form" enctype="multipart/form-data">
+      <p class="muted">Patient: {{ patient.user.full_name }} ({{ patient.patient_id }})</p>
+      <label>Age<input name="age" type="number" min="0" value="{{ patient.age }}" required /></label>
+      <label>Gender
+        <select name="gender" required>
+          <option value="Male" {% if patient.gender == 'Male' %}selected{% endif %}>Male</option>
+          <option value="Female" {% if patient.gender == 'Female' %}selected{% endif %}>Female</option>
+          <option value="Others" {% if patient.gender == 'Others' %}selected{% endif %}>Others</option>
+        </select>
+      </label>
+      <label>Phone<input name="phone" value="{{ patient.phone }}" /></label>
+      <label>Address<input name="address" value="{{ patient.address }}" /></label>
+      <div class="diagnosis-field">
+        <label>Diagnosis<textarea name="diagnosis" rows="3" class="js-diagnosis-text">{{ patient.diagnosis }}</textarea></label>
+        <div class="diag-upload-controls">
+          <label class="button ghost diag-upload-btn">Add Images
+            <input name="diagnosis_images" type="file" accept="image/*" multiple class="js-diagnosis-images-input" hidden />
+          </label>
+          <span class="muted">Tip: press Ctrl+V in diagnosis box to paste images.</span>
+        </div>
+        <div class="diag-images diag-upload-preview js-diagnosis-preview"></div>
+      </div>
+      {% if patient.diagnosis_image_list %}
+      <div>
+        <p class="muted">Existing Images</p>
+        {% for image in patient.diagnosis_image_list %}
+          <div class="diag-existing-item">
+            <a class="diag-thumb-link js-diag-thumb" href="{{ url_for('static', filename=image) }}" data-full="{{ url_for('static', filename=image) }}" aria-label="Open diagnosis image">
+              <img class="diag-thumb" src="{{ url_for('static', filename=image) }}" alt="Diagnosis image" loading="lazy" decoding="async" />
+            </a>
+            <label class="diag-remove-label">
+              <input type="checkbox" name="remove_diagnosis_images" value="{{ image }}" />
+              Delete
+            </label>
+          </div>
+        {% endfor %}
+      </div>
+      {% endif %}
+      <label>Doctor Notes<textarea name="doctor_notes" rows="3">{{ patient.doctor_notes }}</textarea></label>
+      <label>History Entry<textarea name="history_note" rows="3" placeholder="Add a brief visit note..."></textarea></label>
+      <button type="submit">Save</button>
+      <a class="button ghost" href="{{ url_for('doctor.dashboard') }}">Cancel</a>
+    </form>
+    <form method="post" action="{{ url_for('doctor.notify_new_image', patient_profile_id=patient.id) }}" class="form">
+      <button type="submit" class="button ghost">Notify New Image Added</button>
+    </form>
+  </section>
+
+  <section class="list-section">
+    <h2>History Log</h2>
+    <table>
+      <tr><th>Date</th><th>Doctor</th><th>Note</th></tr>
+      {% for entry in history_entries %}
+        <tr>
+          <td>{{ entry.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+          <td>{{ entry.doctor.user.full_name }}</td>
+          <td>{{ entry.note }}</td>
+        </tr>
+      {% endfor %}
+    </table>
+    {% if history_entries|length == 0 %}
+      <p class="muted">No history entries yet.</p>
+    {% endif %}
+  </section>
+{% endblock %}

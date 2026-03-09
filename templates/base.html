@@ -1,0 +1,155 @@
+﻿<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Chick-itsa Clinic</title>
+    <link rel="icon" href="{{ url_for('static', filename='image.png') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}" />
+  </head>
+  <body>
+    <header class="site-header">
+      <div class="brand">Chick-itsa Clinic</div>
+      <nav class="nav">
+        <a href="{{ url_for('auth.index') }}">Home</a>
+        {% if current_user.is_authenticated %}
+          <span class="role">{{ current_user.role|title }}</span>
+          <a href="{{ url_for('auth.logout') }}">Logout</a>
+        {% else %}
+          <a href="{{ url_for('auth.login') }}">Login</a>
+        {% endif %}
+      </nav>
+    </header>
+    <main>
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+          <div class="flash-area">
+            {% for category, message in messages %}
+              <div class="flash {{ category }}">{{ message }}</div>
+            {% endfor %}
+          </div>
+        {% endif %}
+      {% endwith %}
+      {% block content %}{% endblock %}
+    </main>
+    <div id="diagModal" class="diag-modal" hidden>
+      <button type="button" class="diag-modal-close" aria-label="Close">&times;</button>
+      <img id="diagModalImage" class="diag-modal-image" alt="Diagnosis preview" />
+    </div>
+
+    <script>
+      const fields = document.querySelectorAll("input, textarea, select");
+      const updateField = (el) => {
+        if (el.type === "checkbox" || el.type === "radio") {
+          return;
+        }
+        if (el.value && el.value.trim() !== "") {
+          el.classList.add("has-value");
+        } else {
+          el.classList.remove("has-value");
+        }
+      };
+      fields.forEach((el) => {
+        updateField(el);
+        el.addEventListener("input", () => updateField(el));
+        el.addEventListener("change", () => updateField(el));
+      });
+
+      const renderDiagnosisPreview = (fileInput, previewRoot) => {
+        if (!previewRoot) {
+          return;
+        }
+        previewRoot.innerHTML = "";
+        const files = Array.from(fileInput.files || []);
+        files.forEach((file, index) => {
+          if (!file.type.startsWith("image/")) {
+            return;
+          }
+          const item = document.createElement("div");
+          item.className = "diag-upload-item";
+          const img = document.createElement("img");
+          img.className = "diag-thumb";
+          img.alt = "Diagnosis image";
+          img.loading = "lazy";
+          img.decoding = "async";
+          img.src = URL.createObjectURL(file);
+          img.addEventListener("load", () => URL.revokeObjectURL(img.src));
+          const removeBtn = document.createElement("button");
+          removeBtn.type = "button";
+          removeBtn.className = "diag-thumb-remove";
+          removeBtn.setAttribute("aria-label", "Remove image");
+          removeBtn.textContent = "\u00D7";
+          removeBtn.addEventListener("click", () => {
+            const dt = new DataTransfer();
+            Array.from(fileInput.files || []).forEach((f, i) => {
+              if (i !== index) {
+                dt.items.add(f);
+              }
+            });
+            fileInput.files = dt.files;
+            renderDiagnosisPreview(fileInput, previewRoot);
+          });
+          item.appendChild(img);
+          item.appendChild(removeBtn);
+          previewRoot.appendChild(item);
+        });
+      };
+
+      document.querySelectorAll(".diagnosis-field").forEach((field) => {
+        const textInput = field.querySelector(".js-diagnosis-text");
+        const fileInput = field.querySelector(".js-diagnosis-images-input");
+        const previewRoot = field.querySelector(".js-diagnosis-preview");
+        if (!textInput || !fileInput) {
+          return;
+        }
+
+        fileInput.addEventListener("change", () => renderDiagnosisPreview(fileInput, previewRoot));
+        renderDiagnosisPreview(fileInput, previewRoot);
+
+        textInput.addEventListener("paste", (event) => {
+          const items = Array.from(event.clipboardData?.items || []);
+          const pastedImages = items
+            .filter((item) => item.type && item.type.startsWith("image/"))
+            .map((item) => item.getAsFile())
+            .filter(Boolean);
+          if (!pastedImages.length) {
+            return;
+          }
+          event.preventDefault();
+          const dt = new DataTransfer();
+          Array.from(fileInput.files || []).forEach((f) => dt.items.add(f));
+          pastedImages.forEach((f) => dt.items.add(f));
+          fileInput.files = dt.files;
+          renderDiagnosisPreview(fileInput, previewRoot);
+        });
+      });
+
+      const diagModal = document.getElementById("diagModal");
+      const diagModalImage = document.getElementById("diagModalImage");
+      const closeDiagModal = () => {
+        diagModal.hidden = true;
+        diagModalImage.removeAttribute("src");
+      };
+      document.addEventListener("click", (event) => {
+        const thumbLink = event.target.closest(".js-diag-thumb");
+        if (thumbLink) {
+          event.preventDefault();
+          const fullSrc = thumbLink.getAttribute("data-full");
+          if (fullSrc) {
+            diagModalImage.setAttribute("src", fullSrc);
+            diagModal.hidden = false;
+          }
+          return;
+        }
+        if (event.target.classList.contains("diag-modal-close") || event.target.id === "diagModal") {
+          closeDiagModal();
+        }
+      });
+      document.addEventListener("keydown", (event) => {
+        if (event.key === "Escape" && !diagModal.hidden) {
+          closeDiagModal();
+        }
+      });
+    </script>
+  </body>
+</html>

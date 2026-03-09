@@ -1,0 +1,16 @@
+﻿{% extends "base.html" %}
+{% block content %}
+  <section class="card narrow">
+    <h1>Edit Doctor</h1>
+    <form method="post" class="form">
+      <label>Username<input name="username" value="{{ profile.user.username }}" required /></label>
+      <label>Email<input name="email" type="email" value="{{ profile.user.email }}" required /></label>
+      <label>New Password (optional)<input name="password" type="password" /></label>
+      <label>Full Name<input name="full_name" value="{{ profile.user.full_name }}" required /></label>
+      <label>Doctor ID<input name="doctor_id" value="{{ profile.doctor_id }}" required /></label>
+      <label>Department<input name="department" value="{{ profile.department }}" required /></label>
+      <button type="submit">Save</button>
+      <a class="button ghost" href="{{ url_for('admin.dashboard') }}">Cancel</a>
+    </form>
+  </section>
+{% endblock %}

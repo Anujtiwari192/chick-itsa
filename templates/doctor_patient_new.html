@@ -1,0 +1,37 @@
+﻿{% extends "base.html" %}
+{% block content %}
+  <section class="card narrow">
+    <h1>Add Patient</h1>
+    <form method="post" class="form" enctype="multipart/form-data">
+      <label>Username<input name="username" required /></label>
+      <label>Email<input name="email" type="email" required /></label>
+      <label>Password<input name="password" type="password" required /></label>
+      <label>Full Name<input name="full_name" required /></label>
+      <label>Patient ID<input name="patient_id" required /></label>
+      <label>Age<input name="age" type="number" min="0" required /></label>
+      <label>Gender
+        <select name="gender" required>
+          <option value="" disabled selected>Select gender</option>
+          <option value="Male">Male</option>
+          <option value="Female">Female</option>
+          <option value="Others">Others</option>
+        </select>
+      </label>
+      <label>Phone<input name="phone" /></label>
+      <label>Address<input name="address" /></label>
+      <div class="diagnosis-field">
+        <label>Diagnosis<textarea name="diagnosis" rows="3" class="js-diagnosis-text"></textarea></label>
+        <div class="diag-upload-controls">
+          <label class="button ghost diag-upload-btn">Add Images
+            <input name="diagnosis_images" type="file" accept="image/*" multiple class="js-diagnosis-images-input" hidden />
+          </label>
+          <span class="muted">Tip: press Ctrl+V in diagnosis box to paste images.</span>
+        </div>
+        <div class="diag-images diag-upload-preview js-diagnosis-preview"></div>
+      </div>
+      <label>Doctor Notes<textarea name="doctor_notes" rows="3"></textarea></label>
+      <button type="submit">Create Patient</button>
+      <a class="button ghost" href="{{ url_for('doctor.dashboard') }}">Cancel</a>
+    </form>
+  </section>
+{% endblock %}

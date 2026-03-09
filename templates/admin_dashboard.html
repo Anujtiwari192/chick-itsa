@@ -1,0 +1,258 @@
+{% extends "base.html" %}
+{% block content %}
+  <h1>Admin Dashboard</h1>
+
+  <section class="card">
+    <form method="get" class="form inline-form">
+      <label>Search
+        <input name="q" value="{{ q }}" placeholder="Name, ID, department..." />
+      </label>
+      <label>Show
+        <select name="role">
+          <option value="all" {% if role_filter == 'all' %}selected{% endif %}>All</option>
+          <option value="doctors" {% if role_filter == 'doctors' %}selected{% endif %}>Doctors</option>
+          <option value="patients" {% if role_filter == 'patients' %}selected{% endif %}>Patients</option>
+          <option value="assignments" {% if role_filter == 'assignments' %}selected{% endif %}>Assignments</option>
+        </select>
+      </label>
+      <button type="submit">Filter</button>
+      <a class="button ghost" href="{{ url_for('admin.dashboard') }}">Reset</a>
+    </form>
+    <div class="export-row">
+      <a class="button ghost" href="{{ url_for('admin.export_doctors') }}">Export Doctors CSV</a>
+      <a class="button ghost" href="{{ url_for('admin.export_patients') }}">Export Patients CSV</a>
+      <a class="button ghost" href="{{ url_for('admin.export_assignments') }}">Export Assignments CSV</a>
+    </div>
+  </section>
+
+  {% set show_results_first = q|length > 0 %}
+
+  {% if not show_results_first %}
+  <section class="grid">
+    <div class="card">
+      <h2>Create Doctor</h2>
+      <form method="post" class="form">
+        <input type="hidden" name="form_type" value="doctor" />
+        <label>Username<input name="username" required /></label>
+        <label>Email<input name="email" type="email" required /></label>
+        <label>Password<input name="password" type="password" required /></label>
+        <label>Full Name<input name="full_name" required /></label>
+        <label>Doctor ID<input name="doctor_id" required /></label>
+        <label>Department<input name="department" required /></label>
+        <button type="submit">Create Doctor</button>
+      </form>
+    </div>
+
+    <div class="card">
+      <h2>Create Patient</h2>
+      <form method="post" class="form" enctype="multipart/form-data">
+        <input type="hidden" name="form_type" value="patient" />
+        <label>Username<input name="username" required /></label>
+        <label>Email<input name="email" type="email" required /></label>
+        <label>Password<input name="password" type="password" required /></label>
+        <label>Full Name<input name="full_name" required /></label>
+        <label>Patient ID<input name="patient_id" required /></label>
+        <label>Age<input name="age" type="number" min="0" required /></label>
+        <label>Gender
+          <select name="gender" required>
+            <option value="" disabled selected>Select gender</option>
+            <option value="Male">Male</option>
+            <option value="Female">Female</option>
+            <option value="Others">Others</option>
+          </select>
+        </label>
+        <label>Phone<input name="phone" /></label>
+        <label>Address<input name="address" /></label>
+        <div class="diagnosis-field">
+          <label>Diagnosis<textarea name="diagnosis" rows="3" class="js-diagnosis-text"></textarea></label>
+          <div class="diag-upload-controls">
+            <label class="button ghost diag-upload-btn">Add Images
+              <input name="diagnosis_images" type="file" accept="image/*" multiple class="js-diagnosis-images-input" hidden />
+            </label>
+            <span class="muted">Tip: press Ctrl+V in diagnosis box to paste images.</span>
+          </div>
+          <div class="diag-images diag-upload-preview js-diagnosis-preview"></div>
+        </div>
+        <label>Doctor Notes<textarea name="doctor_notes" rows="3"></textarea></label>
+        <button type="submit">Create Patient</button>
+      </form>
+    </div>
+
+    <div class="card">
+      <h2>Assign Patient to Doctor</h2>
+      <form method="post" class="form">
+        <input type="hidden" name="form_type" value="assign" />
+        <label>Doctor ID<input name="doctor_id" required /></label>
+        <label>Patient ID<input name="patient_id" required /></label>
+        <button type="submit">Assign</button>
+      </form>
+    </div>
+  </section>
+  {% endif %}
+
+  {% if role_filter in ['all', 'doctors'] %}
+  <section class="list-section">
+    <h2>Doctors</h2>
+    <table>
+      <tr><th>Doctor ID</th><th>Name</th><th>Email</th><th>Department</th><th>Actions</th></tr>
+      {% if doctors %}
+      {% for d in doctors %}
+        <tr>
+          <td>{{ d.doctor_id }}</td>
+          <td>{{ d.user.full_name }}</td>
+          <td>{{ d.user.email }}</td>
+          <td>{{ d.department }}</td>
+          <td class="actions-cell">
+            <a class="link" href="{{ url_for('admin.doctor_patients', doctor_profile_id=d.id) }}">Assigned Patients</a>
+            <a class="link" href="{{ url_for('admin.edit_doctor', doctor_profile_id=d.id) }}">Edit</a>
+            <form method="post" action="{{ url_for('admin.delete_doctor', doctor_profile_id=d.id) }}" class="inline">
+              <button type="submit" class="link danger">Delete</button>
+            </form>
+          </td>
+        </tr>
+      {% endfor %}
+      {% else %}
+        <tr>
+          <td colspan="5" class="muted">No doctors found for this filter.</td>
+        </tr>
+      {% endif %}
+    </table>
+  </section>
+  {% endif %}
+
+  {% if role_filter in ['all', 'patients'] %}
+  <section class="list-section">
+    <h2>Patients</h2>
+    <table>
+      <tr><th>Patient ID</th><th>Name</th><th>Email</th><th>Age</th><th>Gender</th><th>Diagnosis</th><th>Notes</th><th>Actions</th></tr>
+      {% if patients %}
+      {% for p in patients %}
+        <tr>
+          <td>{{ p.patient_id }}</td>
+          <td>{{ p.user.full_name }}</td>
+          <td>{{ p.user.email }}</td>
+          <td>{{ p.age }}</td>
+          <td>{{ p.gender }}</td>
+          <td>
+            <div>{{ p.diagnosis or "-" }}</div>
+            {% if p.diagnosis_image_list %}
+            <div class="diag-images">
+              {% for image in p.diagnosis_image_list %}
+                <a class="diag-thumb-link js-diag-thumb" href="{{ url_for('static', filename=image) }}" data-full="{{ url_for('static', filename=image) }}" aria-label="Open diagnosis image">
+                  <img class="diag-thumb" src="{{ url_for('static', filename=image) }}" alt="Diagnosis image" loading="lazy" decoding="async" />
+                </a>
+              {% endfor %}
+            </div>
+            {% endif %}
+          </td>
+          <td>{{ p.doctor_notes }}</td>
+          <td class="actions-cell">
+            <a class="link" href="{{ url_for('admin.edit_patient', patient_profile_id=p.id) }}">Edit</a>
+            <form method="post" action="{{ url_for('admin.delete_patient', patient_profile_id=p.id) }}" class="inline">
+              <button type="submit" class="link danger">Delete</button>
+            </form>
+          </td>
+        </tr>
+      {% endfor %}
+      {% else %}
+        <tr>
+          <td colspan="8" class="muted">No patients found for this filter.</td>
+        </tr>
+      {% endif %}
+    </table>
+  </section>
+  {% endif %}
+
+  {% if role_filter in ['all', 'assignments'] %}
+  <section class="list-section">
+    <h2>Assignments</h2>
+    <table>
+      <tr><th>Doctor</th><th>Patient</th><th>Actions</th></tr>
+      {% if assignments %}
+      {% for a in assignments %}
+        <tr>
+          <td>{{ a.doctor.doctor_id }}</td>
+          <td>{{ a.patient.patient_id }}</td>
+          <td class="actions-cell">
+            <a class="link" href="{{ url_for('admin.edit_assignment', assignment_id=a.id) }}">Edit</a>
+            <form method="post" action="{{ url_for('admin.notify_assignment', assignment_id=a.id) }}" class="inline">
+              <button type="submit" class="link">Notify Doctor</button>
+            </form>
+            <form method="post" action="{{ url_for('admin.delete_assignment', assignment_id=a.id) }}" class="inline">
+              <button type="submit" class="link danger">Delete</button>
+            </form>
+          </td>
+        </tr>
+      {% endfor %}
+      {% else %}
+        <tr>
+          <td colspan="3" class="muted">No assignments found for this filter.</td>
+        </tr>
+      {% endif %}
+    </table>
+  </section>
+  {% endif %}
+
+  {% if show_results_first %}
+  <section class="grid">
+    <div class="card">
+      <h2>Create Doctor</h2>
+      <form method="post" class="form">
+        <input type="hidden" name="form_type" value="doctor" />
+        <label>Username<input name="username" required /></label>
+        <label>Email<input name="email" type="email" required /></label>
+        <label>Password<input name="password" type="password" required /></label>
+        <label>Full Name<input name="full_name" required /></label>
+        <label>Doctor ID<input name="doctor_id" required /></label>
+        <label>Department<input name="department" required /></label>
+        <button type="submit">Create Doctor</button>
+      </form>
+    </div>
+
+    <div class="card">
+      <h2>Create Patient</h2>
+      <form method="post" class="form" enctype="multipart/form-data">
+        <input type="hidden" name="form_type" value="patient" />
+        <label>Username<input name="username" required /></label>
+        <label>Email<input name="email" type="email" required /></label>
+        <label>Password<input name="password" type="password" required /></label>
+        <label>Full Name<input name="full_name" required /></label>
+        <label>Patient ID<input name="patient_id" required /></label>
+        <label>Age<input name="age" type="number" min="0" required /></label>
+        <label>Gender
+          <select name="gender" required>
+            <option value="" disabled selected>Select gender</option>
+            <option value="Male">Male</option>
+            <option value="Female">Female</option>
+            <option value="Others">Others</option>
+          </select>
+        </label>
+        <label>Phone<input name="phone" /></label>
+        <label>Address<input name="address" /></label>
+        <div class="diagnosis-field">
+          <label>Diagnosis<textarea name="diagnosis" rows="3" class="js-diagnosis-text"></textarea></label>
+          <div class="diag-upload-controls">
+            <label class="button ghost diag-upload-btn">Add Images
+              <input name="diagnosis_images" type="file" accept="image/*" multiple class="js-diagnosis-images-input" hidden />
+            </label>
+            <span class="muted">Tip: press Ctrl+V in diagnosis box to paste images.</span>
+          </div>
+          <div class="diag-images diag-upload-preview js-diagnosis-preview"></div>
+        </div>
+        <label>Doctor Notes<textarea name="doctor_notes" rows="3"></textarea></label>
+        <button type="submit">Create Patient</button>
+      </form>
+    </div>
+
+    <div class="card">
+      <h2>Assign Patient to Doctor</h2>
+      <form method="post" class="form">
+        <input type="hidden" name="form_type" value="assign" />
+        <label>Doctor ID<input name="doctor_id" required /></label>
+        <label>Patient ID<input name="patient_id" required /></label>
+        <button type="submit">Assign</button>
+      </form>
+    </div>
+  </section>
+  {% endif %}
+{% endblock %}

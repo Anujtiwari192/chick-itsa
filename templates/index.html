@@ -1,0 +1,10 @@
+﻿{% extends "base.html" %}
+{% block content %}
+  <section class="card hero">
+    <h1>Clinic Console</h1>
+    <p>Simple access for admins, doctors, and patients.</p>
+    <div class="actions">
+      <a class="button" href="{{ url_for('auth.login') }}">Login</a>
+    </div>
+  </section>
+{% endblock %}

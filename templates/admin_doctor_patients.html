@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% block content %}
+  <section class="card">
+    <h1>Assigned Patients</h1>
+    <p><strong>Doctor:</strong> {{ doctor.user.full_name }} ({{ doctor.doctor_id }})</p>
+    <p><strong>Email:</strong> {{ doctor.user.email }}</p>
+    <p><strong>Department:</strong> {{ doctor.department }}</p>
+    <a class="button ghost" href="{{ url_for('admin.dashboard') }}">Back to Admin</a>
+  </section>
+
+  <section class="list-section">
+    <table>
+      <tr><th>Patient ID</th><th>Name</th><th>Email</th><th>Age</th><th>Gender</th><th>Diagnosis</th><th>Images</th><th>Notes</th></tr>
+      {% if assignments %}
+      {% for a in assignments %}
+        <tr>
+          <td>{{ a.patient.patient_id }}</td>
+          <td>{{ a.patient.user.full_name }}</td>
+          <td>{{ a.patient.user.email }}</td>
+          <td>{{ a.patient.age }}</td>
+          <td>{{ a.patient.gender }}</td>
+          <td>{{ a.patient.diagnosis }}</td>
+          <td class="diag-images">
+            {% if a.patient.diagnosis_image_list %}
+              {% for image in a.patient.diagnosis_image_list %}
+                <a class="diag-thumb-link js-diag-thumb" href="{{ url_for('static', filename=image) }}" data-full="{{ url_for('static', filename=image) }}" aria-label="Open diagnosis image">
+                  <img class="diag-thumb" src="{{ url_for('static', filename=image) }}" alt="Diagnosis image" loading="lazy" decoding="async" />
+                </a>
+              {% endfor %}
+            {% else %}
+              <span class="muted">No images</span>
+            {% endif %}
+          </td>
+          <td>{{ a.patient.doctor_notes }}</td>
+        </tr>
+      {% endfor %}
+      {% else %}
+        <tr>
+          <td colspan="8" class="muted">No patients assigned to this doctor.</td>
+        </tr>
+      {% endif %}
+    </table>
+  </section>
+{% endblock %}

@@ -1,0 +1,44 @@
+﻿{% extends "base.html" %}
+{% block content %}
+  <h1>Patient Dashboard</h1>
+  <section class="card">
+    <h2>Profile</h2>
+    {% if profile %}
+      <p><strong>ID:</strong> {{ profile.patient_id }}</p>
+      <p><strong>Name:</strong> {{ profile.user.full_name }}</p>
+      <p><strong>Email:</strong> {{ profile.user.email }}</p>
+      <p><strong>Age:</strong> {{ profile.age }}</p>
+      <p><strong>Gender:</strong> {{ profile.gender }}</p>
+      <p><strong>Phone:</strong> {{ profile.phone }}</p>
+      <p><strong>Address:</strong> {{ profile.address }}</p>
+      <p><strong>Diagnosis:</strong> {{ profile.diagnosis }}</p>
+      {% if profile.diagnosis_image_list %}
+      <p><strong>Diagnosis Images:</strong></p>
+      <div class="diag-images">
+        {% for image in profile.diagnosis_image_list %}
+          <a class="diag-thumb-link js-diag-thumb" href="{{ url_for('static', filename=image) }}" data-full="{{ url_for('static', filename=image) }}" aria-label="Open diagnosis image">
+            <img class="diag-thumb" src="{{ url_for('static', filename=image) }}" alt="Diagnosis image" loading="lazy" decoding="async" />
+          </a>
+        {% endfor %}
+      </div>
+      {% endif %}
+      <p><strong>Doctor Notes:</strong> {{ profile.doctor_notes }}</p>
+    {% else %}
+      <p>No profile found.</p>
+    {% endif %}
+  </section>
+
+  <section class="list-section">
+    <h2>Assigned Doctor(s)</h2>
+    <table>
+      <tr><th>Doctor ID</th><th>Name</th><th>Department</th></tr>
+      {% for a in assignments %}
+        <tr>
+          <td>{{ a.doctor.doctor_id }}</td>
+          <td>{{ a.doctor.user.full_name }}</td>
+          <td>{{ a.doctor.department }}</td>
+        </tr>
+      {% endfor %}
+    </table>
+  </section>
+{% endblock %}

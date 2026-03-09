@@ -1,0 +1,52 @@
+﻿{% extends "base.html" %}
+{% block content %}
+  <section class="card narrow">
+    <h1>Edit Patient</h1>
+    <form method="post" class="form" enctype="multipart/form-data">
+      <label>Username<input name="username" value="{{ profile.user.username }}" required /></label>
+      <label>Email<input name="email" type="email" value="{{ profile.user.email }}" required /></label>
+      <label>New Password (optional)<input name="password" type="password" /></label>
+      <label>Full Name<input name="full_name" value="{{ profile.user.full_name }}" required /></label>
+      <label>Patient ID<input name="patient_id" value="{{ profile.patient_id }}" required /></label>
+      <label>Age<input name="age" type="number" min="0" value="{{ profile.age }}" required /></label>
+      <label>Gender
+        <select name="gender" required>
+          <option value="Male" {% if profile.gender == 'Male' %}selected{% endif %}>Male</option>
+          <option value="Female" {% if profile.gender == 'Female' %}selected{% endif %}>Female</option>
+          <option value="Others" {% if profile.gender == 'Others' %}selected{% endif %}>Others</option>
+        </select>
+      </label>
+      <label>Phone<input name="phone" value="{{ profile.phone }}" /></label>
+      <label>Address<input name="address" value="{{ profile.address }}" /></label>
+      <div class="diagnosis-field">
+        <label>Diagnosis<textarea name="diagnosis" rows="3" class="js-diagnosis-text">{{ profile.diagnosis }}</textarea></label>
+        <div class="diag-upload-controls">
+          <label class="button ghost diag-upload-btn">Add Images
+            <input name="diagnosis_images" type="file" accept="image/*" multiple class="js-diagnosis-images-input" hidden />
+          </label>
+          <span class="muted">Tip: press Ctrl+V in diagnosis box to paste images.</span>
+        </div>
+        <div class="diag-images diag-upload-preview js-diagnosis-preview"></div>
+      </div>
+      {% if profile.diagnosis_image_list %}
+      <div>
+        <p class="muted">Existing Images</p>
+        {% for image in profile.diagnosis_image_list %}
+          <div class="diag-existing-item">
+            <a class="diag-thumb-link js-diag-thumb" href="{{ url_for('static', filename=image) }}" data-full="{{ url_for('static', filename=image) }}" aria-label="Open diagnosis image">
+              <img class="diag-thumb" src="{{ url_for('static', filename=image) }}" alt="Diagnosis image" loading="lazy" decoding="async" />
+            </a>
+            <label class="diag-remove-label">
+              <input type="checkbox" name="remove_diagnosis_images" value="{{ image }}" />
+              Delete
+            </label>
+          </div>
+        {% endfor %}
+      </div>
+      {% endif %}
+      <label>Doctor Notes<textarea name="doctor_notes" rows="3">{{ profile.doctor_notes }}</textarea></label>
+      <button type="submit">Save</button>
+      <a class="button ghost" href="{{ url_for('admin.dashboard') }}">Cancel</a>
+    </form>
+  </section>
+{% endblock %}

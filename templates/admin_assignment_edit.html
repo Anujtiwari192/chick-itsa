@@ -1,0 +1,12 @@
+﻿{% extends "base.html" %}
+{% block content %}
+  <section class="card narrow">
+    <h1>Edit Assignment</h1>
+    <form method="post" class="form">
+      <label>Doctor ID<input name="doctor_id" value="{{ assignment.doctor.doctor_id }}" required /></label>
+      <label>Patient ID<input name="patient_id" value="{{ assignment.patient.patient_id }}" required /></label>
+      <button type="submit">Save</button>
+      <a class="button ghost" href="{{ url_for('admin.dashboard') }}">Cancel</a>
+    </form>
+  </section>
+{% endblock %}
