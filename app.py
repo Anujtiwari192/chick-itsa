@@ -55,17 +55,28 @@ def ensure_user_email_column():
     db.session.commit()
 
 
+def normalize_medanta_email_domain():
+    db.session.execute(
+        text(
+            "UPDATE user "
+            "SET email = substr(email, 1, length(email) - 8) || '@index' "
+            "WHERE lower(email) LIKE '%@medanta'"
+        )
+    )
+    db.session.commit()
+
+
 def seed_doctors():
     mock_doctors = [
-        ("dr.richa", "dr.richa@medanta", "Dr. Richa Tiwari", "Paediatrics", "PED-001"),
-        ("dr.aarti", "dr.aarti@medanta", "Dr. Aarti Mehra", "Paediatrics", "PED-002"),
-        ("dr.kunal", "dr.kunal@medanta", "Dr. Kunal Sharma", "Paediatrics", "PED-003"),
-        ("dr.bhanu", "dr.bhanu@medanta", "Dr. Bhanu", "Orthopaedics", "ORT-001"),
-        ("dr.nikhil", "dr.nikhil@medanta", "Dr. Nikhil Rao", "Orthopaedics", "ORT-002"),
-        ("dr.megha", "dr.megha@medanta", "Dr. Megha Sinha", "Orthopaedics", "ORT-003"),
-        ("dr.agraj", "dr.agraj@medanta", "Dr. Agraj Tiwari", "Opthalmology", "OPT-001"),
-        ("dr.arun", "dr.arun@medanta", "Dr. Arun Patel", "Opthalmology", "OPT-002"),
-        ("dr.sana", "dr.sana@medanta", "Dr. Sana Ali", "Opthalmology", "OPT-003"),
+        ("dr.richa", "dr.richa@index", "Dr. Richa Tiwari", "Paediatrics", "PED-001"),
+        ("dr.aarti", "dr.aarti@index", "Dr. Aarti Mehra", "Paediatrics", "PED-002"),
+        ("dr.kunal", "dr.kunal@index", "Dr. Kunal Sharma", "Paediatrics", "PED-003"),
+        ("dr.bhanu", "dr.bhanu@index", "Dr. Bhanu", "Orthopaedics", "ORT-001"),
+        ("dr.nikhil", "dr.nikhil@index", "Dr. Nikhil Rao", "Orthopaedics", "ORT-002"),
+        ("dr.megha", "dr.megha@index", "Dr. Megha Sinha", "Orthopaedics", "ORT-003"),
+        ("dr.agraj", "dr.agraj@index", "Dr. Agraj Tiwari", "Opthalmology", "OPT-001"),
+        ("dr.arun", "dr.arun@index", "Dr. Arun Patel", "Opthalmology", "OPT-002"),
+        ("dr.sana", "dr.sana@index", "Dr. Sana Ali", "Opthalmology", "OPT-003"),
     ]
 
     created = 0
@@ -101,17 +112,17 @@ def seed_doctors():
 def seed_patients_and_assignments():
     mock_patients = [
         # Paediatrics-heavy
-        ("patient.aarav", "patient.aarav@medanta", "Aarav Sharma", "PAT-001", 8, "Male", "9876500001", "Indore", "Viral fever", "Hydration advised"),
-        ("patient.anaya", "patient.anaya@medanta", "Anaya Verma", "PAT-002", 6, "Female", "9876500002", "Bhopal", "Seasonal flu", "Review in 3 days"),
+        ("patient.aarav", "patient.aarav@index", "Aarav Sharma", "PAT-001", 8, "Male", "9876500001", "Indore", "Viral fever", "Hydration advised"),
+        ("patient.anaya", "patient.anaya@index", "Anaya Verma", "PAT-002", 6, "Female", "9876500002", "Bhopal", "Seasonal flu", "Review in 3 days"),
         # Orthopaedics-heavy
-        ("patient.anuj", "patient.anuj@medanta", "Anuj Tiwari", "PAT-003", 39, "Male", "9876500003", "Gwalior", "Knee pain", "Physio recommended"),
-        ("patient.kavya", "patient.kavya@medanta", "Kavya Singh", "PAT-004", 31, "Female", "9876500004", "Dewas", "Back strain", "Rest and analgesics"),
+        ("patient.anuj", "patient.anuj@index", "Anuj Tiwari", "PAT-003", 39, "Male", "9876500003", "Gwalior", "Knee pain", "Physio recommended"),
+        ("patient.kavya", "patient.kavya@index", "Kavya Singh", "PAT-004", 31, "Female", "9876500004", "Dewas", "Back strain", "Rest and analgesics"),
         # Opthalmology-heavy
-        ("patient.neha", "patient.neha@medanta", "Neha Tandon", "PAT-005", 27, "Female", "9876500005", "Gwalior", "Dry eye", "Lubricating drops"),
-        ("patient.rohan", "patient.rohan@medanta", "Rohan Patel", "PAT-006", 45, "Male", "9876500006", "Ratlam", "Blurred vision", "Refraction advised"),
+        ("patient.neha", "patient.neha@index", "Neha Tandon", "PAT-005", 27, "Female", "9876500005", "Gwalior", "Dry eye", "Lubricating drops"),
+        ("patient.rohan", "patient.rohan@index", "Rohan Patel", "PAT-006", 45, "Male", "9876500006", "Ratlam", "Blurred vision", "Refraction advised"),
         # Common across departments
-        ("patient.anujt", "patient.anujt@medanta", "Anujtiw", "PAT-007", 7, "Male", "9876500007", "Jabalpur", "Headache and eye strain", "Multi-dept follow-up"),
-        ("patient.imran", "patient.imran@medanta", "Imran Khan", "PAT-008", 52, "Male", "9876500008", "Sagar", "Diabetes-related concerns", "Cross-specialty monitoring"),
+        ("patient.anujt", "patient.anujt@index", "Anujtiw", "PAT-007", 7, "Male", "9876500007", "Jabalpur", "Headache and eye strain", "Multi-dept follow-up"),
+        ("patient.imran", "patient.imran@index", "Imran Khan", "PAT-008", 52, "Male", "9876500008", "Sagar", "Diabetes-related concerns", "Cross-specialty monitoring"),
     ]
 
     patient_assignments = {
@@ -188,11 +199,12 @@ def seed_patients_and_assignments():
 def initialize_database():
     db.create_all()
     ensure_user_email_column()
+    normalize_medanta_email_domain()
     admin = User.query.filter_by(username="admin").first()
     if not admin:
         admin = User(
             username="admin",
-            email="admin@medanta",
+            email="admin@index",
             password_hash=User.hash_password("admin123"),
             role="admin",
             full_name="Administrator",
@@ -202,7 +214,7 @@ def initialize_database():
         print("Admin user created: admin / admin123")
     else:
         if not admin.email:
-            admin.email = "admin@medanta"
+            admin.email = "admin@index"
             db.session.commit()
         print("Admin already exists.")
 
